@@ -69,33 +69,60 @@
     const spinBtn = document.getElementById("spin-btn");
     const resultDiv = document.getElementById("result");
 
-    // map your backend symbols to image filenames
+    // Map backend symbols to your image filenames
     const symbolMap = {
         "CHERRY": "/items/cherry.png",
         "LEMON": "/items/lemon.png",
         "ORANGE": "/items/orange.png",
         "SEVEN": "/items/seven.png",
         "BAR": "/items/bar.png",
-        "BIG_WIN": "/items/big_win.png",
+        "BIG_WIN": "/items/big_win.png"
     };
 
-    spinBtn.addEventListener("click", () => {
-        // temporary placeholder while spinning
-        reels.forEach(r => r.src = "/items/question.png"); // optional "?" image
+    // All possible images for spinning
+    const spinningSymbols = [
+        "/items/cherry.png",
+        "/items/lemon.png",
+        "/items/orange.png",
+        "/items/seven.png",
+        "/items/bar.png"
+    ];
 
+    spinBtn.addEventListener("click", () => {
+        resultDiv.textContent = "";
+
+        // Fetch backend result first
         fetch("/api/slot/spin")
             .then(res => res.json())
             .then(data => {
-                for (let i = 0; i < 4; i++) {
-                    reels[i].src = symbolMap[data.reels[i]];
-                }
-                resultDiv.textContent = data.win
-                    ? `You win! Payout: ${data.payout}`
-                    : "Try again!";
+
+                // Spin each reel independently
+                reels.forEach((r, i) => {
+                    let spinCount = 0;
+                    const maxSpins = 15 + i * 5; // each reel stops later than the previous
+                    const interval = setInterval(() => {
+                        const randomSymbol = spinningSymbols[Math.floor(Math.random() * spinningSymbols.length)];
+                        r.src = randomSymbol;
+                        spinCount++;
+                        if (spinCount >= maxSpins) {
+                            clearInterval(interval);
+                            r.src = symbolMap[data.reels[i]] || "/items/question.png";
+                        }
+                    }, 80); // 80ms between symbol changes
+                });
+
+                // Show win message after longest reel stops
+                const totalDuration = 80 * (15 + (reels.length - 1) * 5);
+                setTimeout(() => {
+                    resultDiv.textContent = data.win
+                        ? `You win! Payout: ${data.payout}`
+                        : "Try again!";
+                }, totalDuration);
             })
             .catch(err => console.error(err));
     });
 </script>
+
 
 </body>
 </html>
