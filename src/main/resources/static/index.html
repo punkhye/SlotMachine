@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Slot Machine with Images</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            background-color: #222;
+            color: #fff;
+        }
+
+        .slot-machine {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .reel {
+            width: 80px;
+            height: 80px;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .reel img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #spin-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🎰 Slot Machine</h1>
+
+<div class="slot-machine">
+    <div class="reel" id="reel1"><img src="/items/cherry.png" alt="CHERRY"></div>
+    <div class="reel" id="reel2"><img src="/items/lemon.png" alt="LEMON"></div>
+    <div class="reel" id="reel3"><img src="/items/orange.png" alt="ORANGE"></div>
+    <div class="reel" id="reel4"><img src="/items/bar.png" alt="BAR"></div>
+</div>
+
+<button id="spin-btn">SPIN</button>
+
+<pre id="result"></pre>
+
+<script>
+    const reels = [
+        document.getElementById("reel1").querySelector("img"),
+        document.getElementById("reel2").querySelector("img"),
+        document.getElementById("reel3").querySelector("img"),
+        document.getElementById("reel4").querySelector("img"),
+    ];
+    const spinBtn = document.getElementById("spin-btn");
+    const resultDiv = document.getElementById("result");
+
+    // map your backend symbols to image filenames
+    const symbolMap = {
+        "CHERRY": "/items/cherry.png",
+        "LEMON": "/items/lemon.png",
+        "ORANGE": "/items/orange.png",
+        "SEVEN": "/items/seven.png",
+        "BAR": "/items/bar.png",
+        "BIG_WIN": "/items/big_win.png",
+    };
+
+    spinBtn.addEventListener("click", () => {
+        // temporary placeholder while spinning
+        reels.forEach(r => r.src = "/items/question.png"); // optional "?" image
+
+        fetch("/api/slot/spin")
+            .then(res => res.json())
+            .then(data => {
+                for (let i = 0; i < 4; i++) {
+                    reels[i].src = symbolMap[data.reels[i]];
+                }
+                resultDiv.textContent = data.win
+                    ? `You win! Payout: ${data.payout}`
+                    : "Try again!";
+            })
+            .catch(err => console.error(err));
+    });
+</script>
+
+</body>
+</html>
